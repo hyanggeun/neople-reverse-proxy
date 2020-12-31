@@ -17,14 +17,19 @@ func proxy(c *gin.Context) {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)
-	//Define the director func
-	//This is a good place to log, for example
+
 	proxy.Director = func(req *http.Request) {
 		req.Header = c.Request.Header
 		req.Host = remote.Host
 		req.URL.Scheme = remote.Scheme
 		req.URL.Host = remote.Host
 		req.URL.Path = c.Param("proxyPath")
+	}
+
+	proxy.ModifyResponse = func (resp *http.Response) error {
+		resp.Header.Set("Access-Control-Allow-Origin", "*")
+		resp.Header.Set("Access-Control-Allow-Headers", "X-Requested-With")
+		return nil
 	}
 
 	proxy.ServeHTTP(c.Writer, c.Request)
